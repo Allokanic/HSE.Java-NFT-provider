@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: nft-dev
+server:
+  port: 8090
+alchemy:
+  api-key: balaboba
+springdoc:
+  swagger-ui:
+    tryItOutEnabled: true
+    filter: true
+
+
