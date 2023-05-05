@@ -1,14 +1,14 @@
 package com.allokanic.nft.service;
 
+import com.allokanic.nft.message.Log;
+import com.allokanic.nft.message.Signature;
+import com.allokanic.nft.message.Success;
 import com.allokanic.nft.model.*;
 import com.allokanic.nft.model.token721.dto.Mint721TokenRequest;
 import com.allokanic.nft.model.token721.dto.Owner;
 import com.allokanic.nft.model.token721.dto.Transfer721Request;
 import com.allokanic.nft.token.ERC721Tradable;
 import com.allokanic.nft.util.Loader;
-import com.allokanic.nft.message.Log;
-import com.allokanic.nft.message.Signature;
-import com.allokanic.nft.message.Success;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,11 +33,15 @@ public class ERC721Service implements NFTBaseService, IERC721Service {
 
     @Autowired
     public ERC721Service(Loader loader, Web3j web3j) {
+        var bytes = new byte[]{(byte) 0x80, (byte) 0xac, 0x58, (byte) 0xcd};
         this.loader = loader;
         web3j.ethLogFlowable(new EthFilter()).subscribe(event -> {
             List<String> topics = event.getTopics();
             if (topics.size() == 4 && topics.get(0).equals(Signature.TRANSFER_SIGNATURE_ERC721)
             ) {
+                if (!loader.supportsInterface(event.getAddress(), bytes)) {
+                    return;
+                }
                 Address from = TypeDecoder.decodeAddress(topics.get(1));
                 Address to = TypeDecoder.decodeAddress(topics.get(2));
                 BigInteger tokenId = new BigInteger(topics.get(3).substring(2), 16);

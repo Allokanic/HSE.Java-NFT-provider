@@ -37,7 +37,11 @@ public class ERC1155Service implements NFTBaseService, IERC1155Service {
 
         web3j.ethLogFlowable(new EthFilter()).subscribe(event -> {
             List<String> topics = event.getTopics();
-            if (topics.size() == 4 && topics.get(0).equals(TRANSFER_BATCH_SIGNATURE_ERC1155)) {
+            var bytes = new byte[]{(byte) 0xd9, (byte) 0xb6, 0x7a, 0x26};
+            if (topics.get(0).equals(TRANSFER_BATCH_SIGNATURE_ERC1155)) {
+                if (!loader.supportsInterface(event.getAddress(), bytes)) {
+                    return;
+                }
                 List<BigInteger> ids = new LinkedList<>();
                 List<BigInteger> amounts = new LinkedList<>();
 
@@ -70,7 +74,12 @@ public class ERC1155Service implements NFTBaseService, IERC1155Service {
                             amounts.toString()));
                 }
             }
-            else if (topics.size() == 4 && topics.get(0).equals(TRANSFER_SIGNATURE_ERC1155) && event.getData().length() == 130) {
+            else if (topics.get(0).equals(TRANSFER_SIGNATURE_ERC1155)) {
+                System.out.println("tx hash: " + event.getTransactionHash());
+                if (!loader.supportsInterface(event.getAddress(), bytes)) {
+                    System.out.println("false byba 1155");
+                    return;
+                }
                 String data = event.getData().substring(2);
 
                 BigInteger tokenId = new BigInteger(data.substring(0, 64), 16);
